@@ -1,9 +1,9 @@
 const path = require('path');
 const paths = require('../config/paths');
 
-const appRoot = paths.appPath
-const basePath = appRoot + 'src/Modules/'
+const appRoot = path.resolve(paths.appPath)
+const basePath = path.resolve(appRoot, 'src/Modules')
 
 console.log('Hello from createModule!')
-console.log('Absolute path: ', path.resolve(paths.appPath))
+console.log('Absolute path: ', appRoot)
 console.log('basePath for Script: ', basePath)

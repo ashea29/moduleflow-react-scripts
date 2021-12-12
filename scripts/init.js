@@ -374,6 +374,12 @@ module.exports = function (
   console.log(chalk.cyan(`  ${displayedCommand} start`));
   console.log('    Starts the development server.');
   console.log();
+  console.log(chalk.cyan(`  ${displayedCommand} createModule`));
+  console.log('    TEST - Create a new module (either a view or a component).');
+  console.log();
+  console.log(chalk.cyan(`  ${displayedCommand} createEntity`));
+  console.log('    TEST - Create a new Redux entity/state slice.');
+  console.log();
   console.log(
     chalk.cyan(`  ${displayedCommand} ${useYarn ? '' : 'run '}build`)
   );
