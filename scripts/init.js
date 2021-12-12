@@ -185,6 +185,8 @@ module.exports = function (
   appPackage.scripts = Object.assign(
     {
       start: 'react-scripts start',
+      createModule: 'react-scripts createModule',
+      createEntity: 'react-scripts createEntity',
       build: 'react-scripts build',
       test: 'react-scripts test',
       eject: 'react-scripts eject',
