@@ -6,7 +6,7 @@ This package includes scripts and configuration used by [Create React App](https
 
 This edition of react-scripts is intended to be paired with **cra-template-moduleflow**, which I am also currently developing.<br>
 
-For more info about Create React App, please refer to its documentation:
+For more info about Create React App, please refer to its documentation:<br>
 
 - [Getting Started](https://facebook.github.io/create-react-app/docs/getting-started) – How to create a new app.
 - [User Guide](https://facebook.github.io/create-react-app/) – How to develop apps bootstrapped with Create React App.<br>
