@@ -1,6 +1,6 @@
 {
-  "name": "modularworkflow-react-scripts",
-  "version": "1.0.0",
+  "name": "moduleflow-react-scripts",
+  "version": "0.1.0",
   "description": "Configuration and scripts (including two added workflow scripts) for Create React App.",
   "license": "MIT",
   "engines": {
