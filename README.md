@@ -4,7 +4,7 @@
 
 This package includes scripts and configuration used by [Create React App](https://github.com/facebook/create-react-app), along with two added workflow scripts:  'createModule' to automate creating a new view or component along with it's CSS (or styled component -- if using styled components) and test file, and 'createEntity' to automate creating a new entity/state slice in Redux (Redux-Toolkit implementation).<br>
 
-This version of react-scripts is intended to be paired with **cra-template-moduleflow**, which I am also currently developing.<br>
+This edition of react-scripts is intended to be paired with **cra-template-moduleflow**, which I am also currently developing.<br>
 
 For more info about Create React App, please refer to its documentation:
 
