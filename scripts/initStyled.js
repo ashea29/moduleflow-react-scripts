@@ -4,9 +4,11 @@ const { exec } = require('child_process')
 const { mkdir, writeFile, readFile, readdir } = require('fs/promises')
 const { stat } = require('fs')
 const { argv } = require('process')
-const chalk = require('chalk') 
-const stripIndent = require('strip-indent') 
-const { Command } = require('commander')
+const { chalk, stripIndent, commander } = require('./utils/esModuleExports')
+// const stripIndent = require('strip-indent') 
+// const { Command } = require('commander')
+
+const Command = commander.Command
 
 const appRoot = path.resolve(paths.appPath)
 const basePath = path.resolve(appRoot, 'src/Modules')
