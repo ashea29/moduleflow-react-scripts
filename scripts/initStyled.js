@@ -24,7 +24,7 @@ const options = program.opts()
 const installStyledComponents = () => {
   console.log(chalk.blue('Installing styled-components package...'))
   exec(
-    `npm install --prefix ${path.resolve(appRoot, 'node_modules')} styled-components`, 
+    `npm install --prefix ${path.resolve(appRoot)} styled-components`, 
     (error, stdout, stderr) => {
       if (error) {
         console.log(`${chalk.red('Error')}: ${error}`)
@@ -32,7 +32,7 @@ const installStyledComponents = () => {
       if (stderr) {
         console.log(`${chalk.bgRed('stderr')}: ${stderr}`)
       }
-      console.log(`${chalk.green('stdout')}: ${stdout}`)
+      console.log(`${chalk.green('styled-components')} successfully installed!`)
     }
   )
 }
