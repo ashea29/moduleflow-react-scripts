@@ -23,7 +23,7 @@ program.parse(argv)
 const options = program.opts()
 
 const installStyledComponents = () => {
-  console.log(chalk.blue('Installing styled-components package...'))
+  console.log(chalk.cyan('Installing styled-components package...'))
   exec(
     `npm install --prefix ${path.resolve(appRoot)} styled-components`, 
     (error, stdout, stderr) => {
