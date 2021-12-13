@@ -187,6 +187,7 @@ module.exports = function (
       start: 'react-scripts start',
       createModule: 'react-scripts createModule',
       createEntity: 'react-scripts createEntity',
+      initStyled: 'react-scripts initStyled',
       build: 'react-scripts build',
       test: 'react-scripts test',
       eject: 'react-scripts eject',
@@ -379,6 +380,9 @@ module.exports = function (
   console.log();
   console.log(chalk.cyan(`  ${displayedCommand} createEntity`));
   console.log('    TEST - Create a new Redux entity/state slice.');
+  console.log();
+  console.log(chalk.cyan(`  ${displayedCommand} initStyled`));
+  console.log(`    TEST - Install ${chalk.green('styled-components')} (and, if desired, implement theme and utility boilerplate).`);
   console.log();
   console.log(
     chalk.cyan(`  ${displayedCommand} ${useYarn ? '' : 'run '}build`)
