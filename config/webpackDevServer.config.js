@@ -9,10 +9,10 @@
 'use strict';
 
 const fs = require('fs');
-const evalSourceMapMiddleware = require('moduleflow-react-dev-utils/evalSourceMapMiddleware');
-const noopServiceWorkerMiddleware = require('moduleflow-react-dev-utils/noopServiceWorkerMiddleware');
-const ignoredFiles = require('moduleflow-react-dev-utils/ignoredFiles');
-const redirectServedPath = require('moduleflow-react-dev-utils/redirectServedPathMiddleware');
+const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
+const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
+const ignoredFiles = require('react-dev-utils/ignoredFiles');
+const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const paths = require('./paths');
 const getHttpsConfig = require('./getHttpsConfig');
 
