@@ -2,7 +2,7 @@
 
 ## Package still in development and testing - NOT YET READY FOR USE 
 
-This package includes scripts and configuration used by [Create React App](https://github.com/facebook/create-react-app), along with three added workflow scripts:<br>
+This package includes scripts and configuration used by [Create React App](https://github.com/facebook/create-react-app), along with three additional workflow scripts:<br>
 
 - 'createModule' to automate creating a new view or component along with it's CSS (or styled component -- if using styled components) and test file<br>
 - 'createEntity' to automate creating a new entity/state slice in Redux (Redux-Toolkit implementation).<br>
