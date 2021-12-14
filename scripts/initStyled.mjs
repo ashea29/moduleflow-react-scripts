@@ -4,7 +4,7 @@ import { exec } from 'child_process';
 import { mkdir, writeFile, readFile, readdir } from 'fs/promises';
 import { stat } from 'fs';
 import { argv } from 'process';
-import chalk from 'moduleflow-react-dev-utils/chalk.js';
+import chalk from 'react-dev-utils/chalk.js';
 import stripIndent from 'strip-indent'; 
 import commander from 'commander';
 

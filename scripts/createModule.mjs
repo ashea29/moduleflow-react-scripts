@@ -3,8 +3,8 @@ import { appPath } from 'moduleflow-react-scripts/config/paths'
 import { mkdir, writeFile, readFile, readdir } from 'fs/promises'
 import { stat } from 'fs'
 import { argv } from 'process' 
-import stripIndent from 'moduleflow-react-dev-utils/stripIndent.mjs' 
-import commander from 'moduleflow-react-dev-utils/commander.mjs'
+import stripIndent from 'react-dev-utils/stripIndent.mjs' 
+import commander from 'react-dev-utils/commander.mjs'
 
 const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src/Modules')
