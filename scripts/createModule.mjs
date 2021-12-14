@@ -1,14 +1,15 @@
-const path = require('path')
-const paths = require('../config/paths')
-const { mkdir, writeFile, readFile, readdir } = require('fs/promises')
-const { stat } = require('fs')
-const { argv } = require('process') 
-const stripIndent = require('moduleflow-react-dev-utils/stripIndent') 
-const { Command } = require('moduleflow-react-dev-utils/commander')
+import path from 'path'
+import { appPath } from 'moduleflow-react-scripts/config/paths'
+import { mkdir, writeFile, readFile, readdir } from 'fs/promises'
+import { stat } from 'fs'
+import { argv } from 'process' 
+import stripIndent from 'moduleflow-react-dev-utils/stripIndent.mjs' 
+import commander from 'moduleflow-react-dev-utils/commander.mjs'
 
-const appRoot = path.resolve(paths.appPath)
+const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src/Modules')
 
+const { Command } = commander
 const program = new Command()
 const args = argv.slice(2)
 

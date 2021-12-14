@@ -1,7 +1,7 @@
-const path = require('path');
-const paths = require('../config/paths');
+import path from 'path';
+import { appPath } from 'moduleflow-react-scripts/config/paths';
 
-const appRoot = path.resolve(paths.appPath)
+const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src/Modules')
 
 console.log('Hello from createEntity!')
