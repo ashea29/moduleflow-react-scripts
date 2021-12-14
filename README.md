@@ -8,7 +8,7 @@ This package includes scripts and configuration used by [Create React App](https
 - 'createEntity' to automate creating a new entity/state slice in Redux (Redux-Toolkit implementation).<br>
 - 'initStyled' to automate installing **styled-components** (and, if desired, to implement theme and utility boilerplate).<br>
 
-This edition of react-scripts is intended to be paired with **cra-template-moduleflow**, which I am also currently developing, and [moduleflow-react-dev-utils](https://www.npmjs.com/package/moduleflow-react-dev-utils) -- my own augmented version of **react-dev-utils**.<br>
+This edition of react-scripts is intended to be paired with **cra-template-moduleflow**, which I am also currently developing, and [moduleflow-react-dev-utils](https://github.com/ashea29/moduleflow-react-dev-utils) -- my own augmented version of **react-dev-utils**.<br>
 
 For more info about Create React App, please refer to its documentation:<br>
 
