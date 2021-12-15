@@ -44,7 +44,10 @@ const installStyledComponents = () => {
         console.log(`${bgRed(stderr)}`)
         return
       }
-      console.log(`${green('styled-components')} successfully installed!`)
+      console.log(
+        `${green('styled-components')} 
+        ${options.typescript ? ' and ' + green('@types/styled-components') : null} successfully installed!`
+      )
     }
   )
 }
