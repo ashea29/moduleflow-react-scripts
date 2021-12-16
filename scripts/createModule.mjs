@@ -7,7 +7,7 @@ import stripIndent from 'react-dev-utils/stripIndent.mjs'
 import commander from 'react-dev-utils/commander.mjs'
 
 const appRoot = path.resolve(appPath)
-const basePath = path.resolve(appRoot, 'src/Modules')
+const basePath = path.resolve(appRoot, 'src')
 
 const { Command } = commander
 const program = new Command()
@@ -26,13 +26,32 @@ program.parse(argv)
 const options = program.opts()
 
 let moduleName = args[0]
-let moduleExportsFile = `${basePath}/modules.ts`
-let modulesReducer = './src/State/modulesReducer.ts'
+let componentsDir = path.resolve(basePath, 'Components/components')
+let componentExports = path.resolve(basePath, 'Components/componentExports.ts')
+let viewsDir = path.resolve(basePath, 'Views/views')
+let viewExports = path.resolve(basePath, 'Views/viewExports.ts')
 let moduleRoutePath = moduleName.split(/(?=[A-Z])/).map(item => item.toLowerCase()).join('-')
 
-const ModuleContent = stripIndent(`
+const exportsFile = () => {
+  if (options.view) {
+    return viewExports
+  } else if (options.component) {
+    return componentExports
+  }
+}
+
+const modulesDir = () => {
+  if (options.view) {
+    return viewsDir
+  } else if (options.component) {
+    return componentsDir
+  }
+}
+
+
+const ViewContent = stripIndent(`
   import React from 'react'
-  import styles from './${moduleName}.module.css'
+
   
   const ${moduleName}: React.FC = (props: any) => {
     return (
@@ -41,6 +60,7 @@ const ModuleContent = stripIndent(`
       </div>
     )
   }
+
   export default {
     routeProps: {
       path: '/${options.root ? '' : moduleRoutePath}',
@@ -53,96 +73,70 @@ const ModuleContent = stripIndent(`
 `).trim()
 
 
-const ModuleLoadable = stripIndent(`
-  import loadable from '@react-loadable/revised'
-  const ${moduleName}Loadable = loadable({
-    loader: () => import('./${moduleName}'),
-  // SWAP FOR CUSTOM LOADING COMPONENT, IF DESIRED
-    loading() { return <div>Loading...</div> }
-  })
+const ComponentContent = stripIndent(`
+  import React from 'react'
+  ${options.styled ? 
+    `import ${moduleName} from '../../Styled/${moduleName}.styled'`
+    : `import styles from './${moduleName}.module.css'`
+  }
+  
+  const ${moduleName}: React.FC = (props: any) => {
+    return (
+      <div>
+        ${moduleName}
+      </div>
+    )
+  }
+  export default ${moduleName}
+`).trim()
+
+
+const ViewLoadable = stripIndent(`
+  import loadable from '@loadable/component'
+  import pTimeout from 'p-timeout';
+  import pMinDelay from 'p-min-delay'
+
+  const timeoutComponentPath = '../../../utilities/components/Timeout'
+  const loaderComponentPath = '../../../utilities/components/FullscreenSpinner'
+
+  const FallbackComponent = loadable(() =>
+    pMinDelay(import(\`\${loaderComponentPath}\`), 300)
+  )
+
+  const ${moduleName}Loadable = loadable(() =>
+    pTimeout(import('./${moduleName}'), 10000, () => import(\`\${timeoutComponentPath}\`)), {
+      fallback: <FallbackComponent />
+    }
+  )
+
   export default ${moduleName}Loadable
 `).trim()
 
 
-const ModuleState = stripIndent(`
-  import { createSlice } from '@reduxjs/toolkit'
-  import { RootState } from '../../State/store'
-  import { createSelector } from 'reselect'
-  import { ${moduleName}Thunk } from './${moduleName}Thunks'
-  interface Initial${moduleName}State {
-    isLoading: Boolean
-    ${moduleName}Data: {} | null
-  }
-  const initialState: Initial${moduleName}State = {
-    isLoading: false,
-    ${moduleName}Data: null
-  }
-  const ${moduleName}Slice = createSlice({
-    name: '${moduleName}',
-    initialState,
-    reducers: {
-      SET_DATA: (state, { payload }) => {
-        state.${moduleName}Data = payload
-      }
-    },
-    extraReducers: (builder) => {
-      builder.addCase(${moduleName}Thunk.pending, (state, action) => {
-        state.isLoading = true
-      })
-      builder.addCase(${moduleName}Thunk.fulfilled, (state, action) => {
-        state.isLoading = false
-      })
-      builder.addCase(${moduleName}Thunk.rejected, (state, action) => {
-        state.isLoading = false
-      })
-    }
+const ComponentLoadable = stripIndent(`
+  import loadable from '@loadable/component'
+  import pTimeout from 'p-timeout';
+
+
+  const ${moduleName}Loadable = loadable(() => {
+    pTimeout(import('./${moduleName}'), 10000, 'Element failed to load')
   })
-  export const { SET_DATA } = ${moduleName}Slice.actions
-  export const selectEntities = createSelector(
-    (state: RootState) => state.modules.${moduleName}, 
-    (${moduleName}Data) => ${moduleName}Data
-  )
-  
-  export default ${moduleName}Slice.reducer
+
+  export default ${moduleName}Loadable
 `).trim()
 
 
-const ModuleThunks = stripIndent(`
-  import { createAsyncThunk } from '@reduxjs/toolkit'
-  import { AppDispatch } from '../../State/store'
+const TestFileContent = stripIndent(`
+  describe('${moduleName}', () => {
 
-
-  interface ${moduleName}ThunkProps {
-    fieldOne: string
-  }
-
-  interface ThunkAPI {
-    dispatch: AppDispatch
-    getState: Function
-    extra?: any
-    requestId: string
-    signal: AbortSignal
-  }
-
-  export const ${moduleName}Thunk = createAsyncThunk(
-    '${moduleName}/sample',
-    async (thunkProps: ${moduleName}ThunkProps, thunkAPI: ThunkAPI) => {
-      const dispatch = thunkAPI.dispatch
-      try {
-        setTimeout(() => {
-          console.log('Sample output from thunk')
-        }, 3000)
-      } catch (error) {
-        throw error
-      }
-    }
-  )
+  });
 `).trim()
 
 
-const addToExportsAndReducer = async (modulesFile, reducerFile) => {
+
+const addToExports = async (exportsFile, modulesDir) => {
   try {
-    const basePathContents = await readdir(basePath)
+    const basePathContents = await readdir(modulesDir())
     let numberOfModules = 0
 
     basePathContents.forEach((item) => {
@@ -153,34 +147,20 @@ const addToExportsAndReducer = async (modulesFile, reducerFile) => {
       }) 
     })
 
-    const data = await readFile(modulesFile)
+    const data = await readFile(exportsFile())
     const lines = data.toString().split(/\n/)
 
     if (numberOfModules === 0) {
-      lines.splice(numberOfModules, 0, `import ${moduleName}Loadable from './${moduleName}/${moduleName}Loadable'`)
+      lines.splice(numberOfModules, 0, `import ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
     } else {
-      lines.splice(numberOfModules - 1, 0, `import ${moduleName}Loadable from './${moduleName}/${moduleName}Loadable'`)
+      lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
     }
     
-    lines.splice(lines.length - 4, 0, `\t${moduleName}Loadable,`)
+    lines.splice(lines.length - 4, 0, `\t${moduleName},`)
     const updatedFileContent = lines.join('\n')
     await writeFile(modulesFile, updatedFileContent, {})
+
     console.log(`New module '${moduleName}' added to exports in 'modules.ts'`)
-
-    const reducerData = await readFile(reducerFile)
-    const reducerLines = reducerData.toString().split(/\n/)
-
-    if (numberOfModules === 0) {
-      reducerLines.splice(numberOfModules + 1, 0, `import ${moduleName}Reducer from '../Modules/${moduleName}/${moduleName}Slice'`)
-    } else {
-      reducerLines.splice(numberOfModules, 0, `import ${moduleName}Reducer from '../Modules/${moduleName}/${moduleName}Slice'`)
-    }
-
-    reducerLines.splice(reducerLines.length - 2, 0, `\t${moduleName}: ${moduleName}Reducer,`)
-    const updatedReducerContent = reducerLines.join('\n')
-    await writeFile(reducerFile, updatedReducerContent, {})
-
-    console.log(`'${moduleName}' reducer added to 'modulesReducer'`)
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
   }
@@ -189,56 +169,72 @@ const addToExportsAndReducer = async (modulesFile, reducerFile) => {
 
 const createModule = async () => {
   try {
-    await mkdir(basePath + `${moduleName}`, { recursive: true })
+    await mkdir(modulesDir() + `${moduleName}`, { recursive: true })
     console.log(moduleName + ' directory created!')
 
-    await mkdir(basePath + `${moduleName}/components`, { recursive: true })
+    await mkdir(modulesDir() + `${moduleName}/components`, { recursive: true })
     console.log(moduleName + ' components directory created!')
       
-    const files = [
+    const files = options.styled ? [
+      {name: moduleName, extension: '.tsx'},
+      {name: moduleName, extension: 'Loadable.tsx'},
+      {name: moduleName, extension: '.spec.ts'}
+    ] : [
       {name: moduleName, extension: '.module.css'},
       {name: moduleName, extension: '.tsx'},
       {name: moduleName, extension: 'Loadable.tsx'},
-      {name: moduleName, extension: 'Thunks.ts'},
-      {name: moduleName, extension: 'Slice.spec.ts'},
-      {name: moduleName, extension: 'Slice.ts'} 
+      {name: moduleName, extension: '.spec.ts'}
     ]
   
     files.forEach(async (file) => {
-      if (file.extension === '.tsx') {
+      if (options.view && file.extension === '.tsx') {
         await writeFile(
-          basePath + `${moduleName}/` + (file.name + file.extension), 
-          ModulePageContent, 
+          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          ViewContent, 
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
-      } else if (file.extension === 'Loadable.tsx') {
+      } else if (options.component && file.extension === '.tsx') {
         await writeFile(
-          basePath + `${moduleName}/` + (file.name + file.extension), 
-          ModulePageLoadable,
+          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          ComponentContent, 
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
-      } else if (file.extension === 'Slice.ts') {
+      } else if (file.extension === '.module.css') {
         await writeFile(
-          basePath + `${moduleName}/` + (file.name + file.extension), 
-          ModulePageState,
+          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          '', 
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
-      } else if (file.extension === 'Thunks.ts') {
+      } else if (options.view && file.extension === 'Loadable.tsx') {
         await writeFile(
-          basePath + `${moduleName}/` + (file.name + file.extension), 
-          ModulePageThunks,
+          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          ViewLoadable,
+          {}
+        )
+        console.log(`'${file.name + file.extension}' file created!`)
+      } else if (options.component && file.extension === 'Loadable.tsx') {
+        await writeFile(
+          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          ComponentLoadable,
+          {}
+        )
+        console.log(`'${file.name + file.extension}' file created!`)
+      } else if (file.extension === '.spec.ts') {
+        await writeFile(
+          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          TestFileContent,
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
       } else {
-        await writeFile(basePath + `${moduleName}/` + (file.name + file.extension), '', {})
+        await writeFile(modulesDir() + `${moduleName}/` + (file.name + file.extension), '', {})
         console.log(`'${file.name + file.extension}' file created!`)
       }
     })
-    addToExportsAndReducer(moduleExportsFile, modulesReducer)
+    addToExports(exportsFile, modulesDir)
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
   }

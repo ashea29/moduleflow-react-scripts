@@ -2,7 +2,7 @@ import path from 'path';
 import { appPath } from 'moduleflow-react-scripts/config/paths';
 
 const appRoot = path.resolve(appPath)
-const basePath = path.resolve(appRoot, 'src/Modules')
+const basePath = path.resolve(appRoot, 'src/State/Entities')
 
 console.log('Hello from createEntity!')
 console.log('Absolute path: ', appRoot)
