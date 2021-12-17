@@ -2,7 +2,8 @@ import path from 'path'
 import { appPath } from 'moduleflow-react-scripts/config/paths'
 import { mkdir, writeFile, readFile, readdir } from 'fs/promises'
 import { stat } from 'fs'
-import { argv } from 'process' 
+import { argv, exit } from 'process'
+import chalk from 'react-dev-utils/chalk.js';
 import stripIndent from 'strip-indent' 
 import commander from 'commander'
 import inquirer from 'inquirer'
@@ -205,20 +206,40 @@ const addToExports = async (exportsFile, modulesDir) => {
     const data = await readFile(exportsFile)
     const lines = data.toString().split(/\n/)
 
-    if (numberOfModules === 0) {
-      lines.splice(numberOfModules, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
+    if (selectedModuleType === 'Component') {
+
+      if (lines.length < 4) {
+        const missing = (4 - lines.length)
+        
+        for (let i = 1; i <= missing; i++) {
+          lines.push(/\n/)
+        }
+      }
+
+      if (numberOfModules === 0) {
+        lines.splice(numberOfModules, 0, `import * as ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
+        lines.splice(((numberOfModules * 2) + 2), 0, `${moduleName}: typeof ${moduleName}`)
+      } else {
+        lines.splice(numberOfModules - 1, 0, `import * as ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
+        lines.splice(((numberOfModules * 2) + 2), 0, `${moduleName}: typeof ${moduleName}`)
+      }
     } else {
-      lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
+      if (numberOfModules === 0) {
+        lines.splice(numberOfModules, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
+      } else {
+        lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
+      }
+      lines.splice(lines.length - 4, 0, `\t${moduleName},`)
     }
+
     
-    lines.splice(lines.length - 4, 0, `\t${moduleName},`)
     const updatedFileContent = lines.join('\n')
     await writeFile(exportsFile, updatedFileContent, {})
 
-    console.log(`New module '${moduleName}' added to exports in '${selectedModuleType.toLowerCase()}Exports.ts'`)
+    console.log(`New ${selectedModuleType.toLowerCase()} ${cyan(moduleName)} added to exports in '${selectedModuleType.toLowerCase()}Exports.ts'`)
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
-    process.exit()
+    exit()
   }
 }
 
@@ -226,7 +247,7 @@ const addToExports = async (exportsFile, modulesDir) => {
 const createModule = async () => {
   try {
     await mkdir(modulesDir(selectedModuleType) + `/${moduleName}`, { recursive: true })
-    console.log(moduleName + ' directory created!')
+    console.log(cyan(moduleName) + ' directory created!')
       
     const files = options.styled ? [
       {name: moduleName, extension: '.tsx'},
@@ -250,7 +271,7 @@ const createModule = async () => {
           ComponentContent, 
           {}
         )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (
         (options.view || selectedModuleType === 'View') 
         && file.extension === '.tsx'
@@ -260,7 +281,7 @@ const createModule = async () => {
           ViewContent, 
           {}
         )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (
           (options.component || selectedModuleType === 'Component')
           && options.styled 
@@ -271,14 +292,14 @@ const createModule = async () => {
               StyledComponentContent, 
               {}
             )
-            console.log(`'${file.name + file.extension}' file created!`)
+            console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (file.extension === '.module.css') {
         await writeFile(
           modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
           '', 
           {}
         )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (
           (options.view || selectedModuleType === 'View')
           && file.extension === 'Loadable.tsx'
@@ -288,7 +309,7 @@ const createModule = async () => {
             ViewLoadable,
             {}
         )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (
           (options.component || selectedModuleType === 'Component')
           && file.extension === 'Loadable.tsx'
@@ -298,27 +319,27 @@ const createModule = async () => {
             ComponentLoadable,
             {}
           )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (file.extension === '.spec.ts') {
         await writeFile(
           modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
           TestFileContent,
           {}
         )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       } else {
         await writeFile(
           modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension),
           '',
           {}
         )
-        console.log(`'${file.name + file.extension}' file created!`)
+        console.log(cyan(file.name + file.extension) + ' file created!')
       }
     })
     await addToExports(exportsFile(selectedModuleType), modulesDir(selectedModuleType))
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
-    process.exit()
+    exit()
   }
 }
 
@@ -332,6 +353,6 @@ if (!options.view && !options.component) {
     createModule()
   }).catch((error) => {
     console.log(error)
-    process.exit()
+    exit()
   })
 }
