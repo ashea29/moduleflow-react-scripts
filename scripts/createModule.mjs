@@ -3,8 +3,9 @@ import { appPath } from 'moduleflow-react-scripts/config/paths'
 import { mkdir, writeFile, readFile, readdir } from 'fs/promises'
 import { stat } from 'fs'
 import { argv } from 'process' 
-import stripIndent from 'react-dev-utils/stripIndent.mjs' 
-import commander from 'react-dev-utils/commander.mjs'
+import stripIndent from 'strip-indent' 
+import commander from 'commander'
+import inquirer from 'inquirer'
 
 const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src')
@@ -16,7 +17,7 @@ const args = argv.slice(2)
 program
   .option('-v, --view', 'Module is a view or "page"')
   .option('-c, --component', 'Module is a component')
-  .option('-s, --styled', 'Module should use styled-components for styling instead of CSS')
+  .option('-s, --styled', 'Module should use styled-components instead of CSS')
   .option('-r, --root', `Module is the application's root path (i.e., "/")`)
   .option('-p, --protected', 'Module is a protected route')
   .option('-e, --exact', `Module route should have the "exact" prop`)
@@ -25,30 +26,67 @@ program
 program.parse(argv)
 const options = program.opts()
 
+
+let selectedModuleType
+
+const noModuleTypeSelected = {
+  type: "checkbox",
+  name: "Module Type",
+  message: "Please specify whether the new module is a view or a component: ",
+  choices: [
+    { 
+      name: "View" 
+    }, 
+    { 
+      name: "Component" 
+    }
+  ],
+  validate(answer) {
+    if (answer.length < 1) {
+      return 'You must select an option'
+    }
+    return true
+  }
+}
+
+
 let moduleName = args[0]
 let componentsDir = path.resolve(basePath, 'Components/components')
+let styledDir = path.resolve(basePath, 'Components/Styled')
 let componentExports = path.resolve(basePath, 'Components/componentExports.ts')
 let viewsDir = path.resolve(basePath, 'Views/views')
 let viewExports = path.resolve(basePath, 'Views/viewExports.ts')
 let moduleRoutePath = moduleName.split(/(?=[A-Z])/).map(item => item.toLowerCase()).join('-')
 
-const exportsFile = () => {
+const exportsFile = (altVariable) => {
   if (options.view) {
     return viewExports
   } else if (options.component) {
     return componentExports
+  } else if (altVariable) {
+    return path.resolve(
+      basePath, 
+      `${altVariable}s/${altVariable.toLowerCase()}Exports.ts`
+    )
   }
 }
 
-const modulesDir = () => {
+const modulesDir = (altVariable) => {
   if (options.view) {
     return viewsDir
   } else if (options.component) {
     return componentsDir
+  } else if (altVariable) {
+    return path.resolve(
+      basePath, 
+      `${altVariable}s/${altVariable.toLowerCase()}s`
+    )
   }
 }
 
 
+
+// TEMPLATES FOR FILE CREATION
 const ViewContent = stripIndent(`
   import React from 'react'
 
@@ -76,18 +114,35 @@ const ViewContent = stripIndent(`
 const ComponentContent = stripIndent(`
   import React from 'react'
   ${options.styled ? 
-    `import ${moduleName} from '../../Styled/${moduleName}.styled'`
+    `import Styled${moduleName} from '../../Styled/${moduleName}.styled'`
     : `import styles from './${moduleName}.module.css'`
   }
   
   const ${moduleName}: React.FC = (props: any) => {
     return (
-      <div>
+      ${options.styled ?
+      `<Styled${moduleName}>
+          ${moduleName}
+      </Styled${moduleName}>`
+        : 
+      `<div>
         ${moduleName}
-      </div>
+      </div>` 
+      }
     )
   }
   export default ${moduleName}
+`).trim()
+
+
+const StyledComponentContent = stripIndent(`
+  import styled from 'styled-components'
+
+  const Styled${moduleName} = styled.div\`
+
+  \`
+
+  export default Styled${moduleName}
 `).trim()
 
 
@@ -118,9 +173,9 @@ const ComponentLoadable = stripIndent(`
   import pTimeout from 'p-timeout';
 
 
-  const ${moduleName}Loadable = loadable(() => {
+  const ${moduleName}Loadable = loadable(() =>
     pTimeout(import('./${moduleName}'), 10000, 'Element failed to load')
-  })
+  )
 
   export default ${moduleName}Loadable
 `).trim()
@@ -136,49 +191,48 @@ const TestFileContent = stripIndent(`
 
 const addToExports = async (exportsFile, modulesDir) => {
   try {
-    const basePathContents = await readdir(modulesDir())
+    const basePathContents = await readdir(modulesDir)
     let numberOfModules = 0
 
     basePathContents.forEach((item) => {
-      stat(basePath + '/' + item, (error, stats) => {
+      stat(path.resolve(modulesDir, item), (error, stats) => {
         if (stats.isDirectory()) {
           numberOfModules++
         }
       }) 
     })
 
-    const data = await readFile(exportsFile())
+    const data = await readFile(exportsFile)
     const lines = data.toString().split(/\n/)
 
     if (numberOfModules === 0) {
-      lines.splice(numberOfModules, 0, `import ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
+      lines.splice(numberOfModules, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
     } else {
-      lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
+      lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
     }
     
     lines.splice(lines.length - 4, 0, `\t${moduleName},`)
     const updatedFileContent = lines.join('\n')
-    await writeFile(modulesFile, updatedFileContent, {})
+    await writeFile(exportsFile, updatedFileContent, {})
 
-    console.log(`New module '${moduleName}' added to exports in 'modules.ts'`)
+    console.log(`New module '${moduleName}' added to exports in '${selectedModuleType.toLowerCase()}Exports.ts'`)
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
+    process.exit()
   }
 }
 
 
 const createModule = async () => {
   try {
-    await mkdir(modulesDir() + `${moduleName}`, { recursive: true })
+    await mkdir(modulesDir(selectedModuleType) + `/${moduleName}`, { recursive: true })
     console.log(moduleName + ' directory created!')
-
-    await mkdir(modulesDir() + `${moduleName}/components`, { recursive: true })
-    console.log(moduleName + ' components directory created!')
       
     const files = options.styled ? [
       {name: moduleName, extension: '.tsx'},
       {name: moduleName, extension: 'Loadable.tsx'},
-      {name: moduleName, extension: '.spec.ts'}
+      {name: moduleName, extension: '.spec.ts'},
+      {name: moduleName, extension: '.styled.ts'}
     ] : [
       {name: moduleName, extension: '.module.css'},
       {name: moduleName, extension: '.tsx'},
@@ -187,57 +241,97 @@ const createModule = async () => {
     ]
   
     files.forEach(async (file) => {
-      if (options.view && file.extension === '.tsx') {
+      if (
+        (options.component || selectedModuleType === 'Component') 
+        && file.extension === '.tsx'
+      ) {
         await writeFile(
-          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
-          ViewContent, 
-          {}
-        )
-        console.log(`'${file.name + file.extension}' file created!`)
-      } else if (options.component && file.extension === '.tsx') {
-        await writeFile(
-          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
           ComponentContent, 
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
+      } else if (
+        (options.view || selectedModuleType === 'View') 
+        && file.extension === '.tsx'
+      ) {
+        await writeFile(
+          modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
+          ViewContent, 
+          {}
+        )
+        console.log(`'${file.name + file.extension}' file created!`)
+      } else if (
+          (options.component || selectedModuleType === 'Component')
+          && options.styled 
+          && file.extension === '.styled.ts'
+        ) {
+            await writeFile(
+              styledDir + '/' + (file.name + file.extension), 
+              StyledComponentContent, 
+              {}
+            )
+            console.log(`'${file.name + file.extension}' file created!`)
       } else if (file.extension === '.module.css') {
         await writeFile(
-          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
           '', 
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
-      } else if (options.view && file.extension === 'Loadable.tsx') {
-        await writeFile(
-          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
-          ViewLoadable,
-          {}
+      } else if (
+          (options.view || selectedModuleType === 'View')
+          && file.extension === 'Loadable.tsx'
+        ) {
+          await writeFile(
+            modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
+            ViewLoadable,
+            {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
-      } else if (options.component && file.extension === 'Loadable.tsx') {
-        await writeFile(
-          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
-          ComponentLoadable,
-          {}
-        )
+      } else if (
+          (options.component || selectedModuleType === 'Component')
+          && file.extension === 'Loadable.tsx'
+        ) {
+          await writeFile(
+            modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
+            ComponentLoadable,
+            {}
+          )
         console.log(`'${file.name + file.extension}' file created!`)
       } else if (file.extension === '.spec.ts') {
         await writeFile(
-          modulesDir() + `${moduleName}/` + (file.name + file.extension), 
+          modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
           TestFileContent,
           {}
         )
         console.log(`'${file.name + file.extension}' file created!`)
       } else {
-        await writeFile(modulesDir() + `${moduleName}/` + (file.name + file.extension), '', {})
+        await writeFile(
+          modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension),
+          '',
+          {}
+        )
         console.log(`'${file.name + file.extension}' file created!`)
       }
     })
-    addToExports(exportsFile, modulesDir)
+    await addToExports(exportsFile(selectedModuleType), modulesDir(selectedModuleType))
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
+    process.exit()
   }
 }
 
-createModule()
+
+if (!options.view && !options.component) {
+  inquirer.prompt([
+    noModuleTypeSelected
+  ]).then((answers) => {
+    console.log(answers['Module Type'][0])
+    selectedModuleType = answers['Module Type'][0]
+    createModule()
+  }).catch((error) => {
+    console.log(error)
+    process.exit()
+  })
+}
