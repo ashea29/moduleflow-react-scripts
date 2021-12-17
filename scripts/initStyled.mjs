@@ -3,7 +3,7 @@ import paths from 'moduleflow-react-scripts/config/paths.js';
 import { exec } from 'child_process';
 import { mkdir, writeFile, readFile, readdir } from 'fs/promises';
 import { stat, existsSync } from 'fs';
-import { argv } from 'process';
+import { argv, exit } from 'process';
 import chalk from 'react-dev-utils/chalk.js';
 import stripIndent from 'strip-indent'; 
 import commander from 'commander';
