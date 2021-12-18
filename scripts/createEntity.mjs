@@ -124,20 +124,13 @@ const addToReducerAndExports = async (reducerFile, exportsFile) => {
     const data = await readFile(exportsFile)
     const lines = data.toString().split(/\n/)
 
-    if (lines.length < 4) {
-      const missing = (4 - lines.length)
-      
-      for (let i = 1; i <= missing; i++) {
-        lines.push(/\n/)
-      }
-    }
 
     if (numberOfEntities === 0) {
       lines.splice(numberOfEntities, 0, `import * as ${entityName}Slice from './${entityName}/${entityName}'`)
-      lines.splice(((numberOfEntities * 2) + 2), 0, `export const ${entityName} = ${entityName}Slice`)
+      lines.push(`export const ${entityName} = ${entityName}Slice`)
     } else {
       lines.splice(numberOfEntities - 1, 0, `import * as ${entityName}Slice from './${entityName}/${entityName}'`)
-      lines.splice(((numberOfEntities * 2) + 2), 0, `export const ${entityName} = ${entityName}Slice`)
+      lines.push(`export const ${entityName} = ${entityName}Slice`)
     }
     
     const updatedFileContent = lines.join('\n')

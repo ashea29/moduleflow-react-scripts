@@ -7,8 +7,10 @@ import { argv, exit } from 'process';
 import chalk from 'react-dev-utils/chalk.js';
 import stripIndent from 'strip-indent'; 
 import commander from 'commander';
+import { createRequire } from 'module'
 
 
+const require = createRequire(import.meta.url)
 const { Command } = commander
 const { appPath } = paths
 const { cyan, red, bgRed, green } = chalk
@@ -19,6 +21,7 @@ const yarn = fs.existsSync(path.join(appPath, 'yarn.lock'))
 const program = new Command()
 const args = argv.slice(2)
 
+
 program
   .option('--typescript', 'Use TypeScript, and install type definitions')
   .option('-t, --theme', 'Use theme and global style presets')
@@ -26,6 +29,14 @@ program
 
 program.parse(argv)
 const options = program.opts()
+
+const packageJson = require(path.resolve(appRoot, 'package.json'))
+
+console.log(packageJson.projectPreferences.styles)
+
+const newPackageJson = JSON.stringify(packageJson, null, '\t')
+writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
+console.log(packageJson)
 
 
 const installStyledComponents = () => {
