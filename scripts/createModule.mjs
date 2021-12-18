@@ -10,6 +10,7 @@ import inquirer from 'inquirer'
 
 const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src')
+const { cyan, red, bgRed, green } = chalk
 
 const { Command } = commander
 const program = new Command()
@@ -84,7 +85,6 @@ const modulesDir = (altVariable) => {
     )
   }
 }
-
 
 
 // TEMPLATES FOR FILE CREATION
@@ -206,22 +206,14 @@ const addToExports = async (exportsFile, modulesDir) => {
     const data = await readFile(exportsFile)
     const lines = data.toString().split(/\n/)
 
+
     if (selectedModuleType === 'Component') {
-
-      if (lines.length < 4) {
-        const missing = (4 - lines.length)
-        
-        for (let i = 1; i <= missing; i++) {
-          lines.push(/\n/)
-        }
-      }
-
       if (numberOfModules === 0) {
         lines.splice(numberOfModules, 0, `import * as ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
-        lines.splice(((numberOfModules * 2) + 2), 0, `${moduleName}: typeof ${moduleName}`)
+        lines.push(`export const ${entityName} = ${entityName}`)
       } else {
         lines.splice(numberOfModules - 1, 0, `import * as ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
-        lines.splice(((numberOfModules * 2) + 2), 0, `${moduleName}: typeof ${moduleName}`)
+        lines.push(`export const ${entityName} = ${entityName}`)
       }
     } else {
       if (numberOfModules === 0) {
