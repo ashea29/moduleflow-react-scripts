@@ -23,12 +23,58 @@ const args = argv.slice(2)
 
 
 program
-  .option('--typescript', 'Use TypeScript, and install type definitions')
-  .option('-t, --theme', 'Use theme and global style presets')
-  .option('-u, --utilities', 'Use utility styled components presets (i.e. - Container, Flex')
+  .option('-t, --theme', 'Add theme and global style presets')
+  .option('-u, --utilities', 'Add utility styled components presets (i.e. - Container, Flex')
+  .option('-a, --auth', 'Add Redux boilerplate for authentication')
 
 program.parse(argv)
 const options = program.opts()
+
+
+const stylesPreference = {
+    type: "checkbox",
+    name: "Styles Preference",
+    message: "What do you want to use for styling?",
+    choices: [
+      { 
+        name: "CSS" 
+      }, 
+      { 
+        name: "styled-components" 
+      }
+    ],
+    validate(answer) {
+      if (answer.length < 1) {
+        return 'You must select an option'
+      }
+      return true
+    }
+}
+
+const typescriptPreference = {
+    type: "confirm",
+    name: "Theme/Global Presets Preference",
+    message: "Do you want to add some minimal presets for theme and global styles?",
+    validate(answer) {
+      if (answer.length < 1) {
+        return 'You must select an option'
+      }
+      return true
+    }
+}
+
+const reduxAuthPreference = {
+    type: "confirm",
+    name: "Redux Auth Preference",
+    message: "Do you want to add some minimal Redux boilerplate for authentication?",
+    validate(answer) {
+      if (answer.length < 1) {
+        return 'You must select an option'
+      }
+      return true
+    }
+}
+
 
 const packageJson = require(path.resolve(appRoot, 'package.json'))
 
