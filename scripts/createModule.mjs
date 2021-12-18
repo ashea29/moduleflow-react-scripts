@@ -19,7 +19,7 @@ const args = argv.slice(2)
 program
   .option('-v, --view', 'Module is a view or "page"')
   .option('-c, --component', 'Module is a component')
-  .option('-s, --styled', 'Module should use styled-components instead of CSS')
+  // .option('-s, --styled', 'Module should use styled-components instead of CSS')
   .option('-r, --root', `Module is the application's root path (i.e., "/")`)
   .option('-p, --protected', 'Module is a protected route')
   .option('-e, --exact', `Module route should have the "exact" prop`)
