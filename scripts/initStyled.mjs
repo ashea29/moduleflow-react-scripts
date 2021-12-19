@@ -7,6 +7,7 @@ import { argv, exit } from 'process';
 import chalk from 'react-dev-utils/chalk.js';
 import stripIndent from 'strip-indent'; 
 import commander from 'commander';
+import inquirer from 'inquirer'
 import { createRequire } from 'module'
 
 
@@ -16,7 +17,7 @@ const { appPath } = paths
 const { cyan, red, bgRed, green } = chalk
 const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src/Modules')
-const yarn = fs.existsSync(path.join(appPath, 'yarn.lock'))
+const yarn = existsSync(path.join(appPath, 'yarn.lock'))
 
 const program = new Command()
 const args = argv.slice(2)
@@ -45,6 +46,9 @@ const stylesPreference = {
         name: "styled-components" 
       }
     ],
+    when: (answers) => {
+      return (!options.styled && !options.css) && !answers["Styles Preference"]
+    },
     validate(answer) {
       if (answer.length < 1) {
         return 'You must select an option'
@@ -57,109 +61,91 @@ const themeAndGlobalStylesPreference = {
     type: "confirm",
     name: "Theme/Global Presets Preference",
     message: "Do you want to add minimal presets for theme and global styles?",
-    default: true
+    default: true,
+    when: (answers) => {
+      return (options.styled || answers["Styles Preference"]) && !options.theme
+    }
 }
 
 const utilitiesPreference = {
     type: "confirm",
     name: "Utilities Preference",
     message: "Do you want to add utility styled components presets (i.e. - Container, Flex)?",
-    default: true
+    default: true,
+    when: (answers) => {
+      return (options.styled || answers["Styles Preference"]) && !options.utilities
+    }
 }
 
 const reduxAuthPreference = {
     type: "confirm",
     name: "Redux Auth Preference",
     message: "Do you want to add minimal Redux boilerplate for authentication?",
-    default: true
+    default: true,
+    when: (answers) => {
+      return (!options.auth && !answers["Redux Auth Preference"])
+    }
 }
-
-
-//ANSWERS STRUCTURE:
-/*
-{
-  'Styles Preference': [ 'styled-components' ],
-  'Theme/Global Presets Preference': false,
-  'Redux Auth Preference': false
-}
-*/
-
-// const packageJson = require(path.resolve(appRoot, 'package.json'))
-
-// console.log(packageJson.projectPreferences.styles)
-
-// const newPackageJson = JSON.stringify(packageJson, null, '\t')
-// writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
-// console.log(packageJson)
 
 
 const installStyledComponents = () => {
-  console.log(cyan('Installing styled-components package...'))
+  console.log(cyan('Installing styled-components...'))
   exec(
     `${yarn ? 
-        `yarn --cwd ${JSON.stringify(appPath)} add` 
-        : 'npm install --prefix'} ${JSON.stringify(appPath)} 
-      styled-components styled-breakpoints
-      ${options.typescript ? 
-        '@types/styled-components' 
-        : null
-    }`, 
+        `yarn --cwd ${JSON.stringify(appRoot)} add styled-components styled-breakpoints @types/styled-components` 
+        : `npm install --prefix ${JSON.stringify(appRoot)} styled-components styled-breakpoints @types/styled-components`
+     }`, 
     (error, stdout, stderr) => {
       if (error) {
         console.log(`${bgRed(error)}`)
-        return
+        exit()
       }
       if (stderr) {
         console.log(`${bgRed(stderr)}`)
-        return
+        exit()
       }
+
+      const packageJson = require(path.resolve(appRoot, 'package.json'))
+      
+      packageJson.projectPreferences.styles = "styled-components"
+      console.log(packageJson.projectPreferences.styles)
+    
+      // const newPackageJson = JSON.stringify(packageJson, null, '\t')
+      // writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
+      // console.log(packageJson)
       console.log(
-        `${green('styled-components, styled-breakpoints')} 
-         ${options.typescript ? 
-          ' and ' + green('@types/styled-components') 
-          : null
-         } 
-         successfully installed!`
+        `${green('styled-components, styled-breakpoints, @types/styled-components')}
+        successfully installed!`
       )
     }
   )
 }
 
-let questionsArray = []
-let cliQuestions
-
-
-(cliQuestions = () => {
-  if (!options.styled && !options.css) questionsArray.push(stylesPreference)
-  if (options.styled && !options.theme) questionsArray.push(themeAndGlobalStylesPreference)
-  if (options.styled && !options.utilities) questionsArray.push(utilitiesPreference)
-  if (!options.auth) questionsArray.push(reduxAuthPreference)
-})()
-
-
-//Might have to utilize the 'when' argument in the question object definitions in order to make this logic work properly
-
 if (
-    (!options.styled   || 
+    !options.styled   || 
     !options.css       ||
     !options.theme     ||
     !options.utilities ||
-    !options.auth )    &&
-    questionsArray.length
+    !options.auth
   ) {
-  inquirer.prompt(
-    questionsArray
-  ).then((answers) => {
+  inquirer.prompt([    
+    stylesPreference,
+    themeAndGlobalStylesPreference,
+    utilitiesPreference,
+    reduxAuthPreference
+  ]).then((answers) => {
     console.log(answers)
-    // selectedModuleType = answers['Module Type'][0]
-    // installStyledComponents()
+    if (
+      options.styled || 
+      answers["Styles Preference"][0] === "styled-components"
+    ) {
+      installStyledComponents()
+    }
   }).catch((error) => {
     console.log(error)
     exit()
   })
 }
-
-
 
 
 const ContainerUtility = stripIndent(`
