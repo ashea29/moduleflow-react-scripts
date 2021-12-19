@@ -23,13 +23,15 @@ const args = argv.slice(2)
 
 
 program
+  .option('-s, --styled', 'Use styled-components')
+  .option('-c, --css', 'Use CSS')
   .option('-t, --theme', 'Add theme and global style presets')
   .option('-u, --utilities', 'Add utility styled components presets (i.e. - Container, Flex')
   .option('-a, --auth', 'Add Redux boilerplate for authentication')
 
 program.parse(argv)
 const options = program.opts()
-
+console.log(options)
 
 const stylesPreference = {
     type: "checkbox",
@@ -51,38 +53,44 @@ const stylesPreference = {
     }
 }
 
-const typescriptPreference = {
+const themeAndGlobalStylesPreference = {
     type: "confirm",
     name: "Theme/Global Presets Preference",
-    message: "Do you want to add some minimal presets for theme and global styles?",
-    validate(answer) {
-      if (answer.length < 1) {
-        return 'You must select an option'
-      }
-      return true
-    }
+    message: "Do you want to add minimal presets for theme and global styles?",
+    default: true
+}
+
+const utilitiesPreference = {
+    type: "confirm",
+    name: "Utilities Preference",
+    message: "Do you want to add utility styled components presets (i.e. - Container, Flex)?",
+    default: true
 }
 
 const reduxAuthPreference = {
     type: "confirm",
     name: "Redux Auth Preference",
-    message: "Do you want to add some minimal Redux boilerplate for authentication?",
-    validate(answer) {
-      if (answer.length < 1) {
-        return 'You must select an option'
-      }
-      return true
-    }
+    message: "Do you want to add minimal Redux boilerplate for authentication?",
+    default: true
 }
 
 
-const packageJson = require(path.resolve(appRoot, 'package.json'))
+//ANSWERS STRUCTURE:
+/*
+{
+  'Styles Preference': [ 'styled-components' ],
+  'Theme/Global Presets Preference': false,
+  'Redux Auth Preference': false
+}
+*/
 
-console.log(packageJson.projectPreferences.styles)
+// const packageJson = require(path.resolve(appRoot, 'package.json'))
 
-const newPackageJson = JSON.stringify(packageJson, null, '\t')
-writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
-console.log(packageJson)
+// console.log(packageJson.projectPreferences.styles)
+
+// const newPackageJson = JSON.stringify(packageJson, null, '\t')
+// writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
+// console.log(packageJson)
 
 
 const installStyledComponents = () => {
@@ -117,7 +125,41 @@ const installStyledComponents = () => {
   )
 }
 
-installStyledComponents()
+let questionsArray = []
+let cliQuestions
+
+
+(cliQuestions = () => {
+  if (!options.styled && !options.css) questionsArray.push(stylesPreference)
+  if (options.styled && !options.theme) questionsArray.push(themeAndGlobalStylesPreference)
+  if (options.styled && !options.utilities) questionsArray.push(utilitiesPreference)
+  if (!options.auth) questionsArray.push(reduxAuthPreference)
+})()
+
+
+//Might have to utilize the 'when' argument in the question object definitions in order to make this logic work properly
+
+if (
+    (!options.styled   || 
+    !options.css       ||
+    !options.theme     ||
+    !options.utilities ||
+    !options.auth )    &&
+    questionsArray.length
+  ) {
+  inquirer.prompt(
+    questionsArray
+  ).then((answers) => {
+    console.log(answers)
+    // selectedModuleType = answers['Module Type'][0]
+    // installStyledComponents()
+  }).catch((error) => {
+    console.log(error)
+    exit()
+  })
+}
+
+
 
 
 const ContainerUtility = stripIndent(`
@@ -131,6 +173,17 @@ const ContainerUtility = stripIndent(`
   \`
 
   export default Container
+`).trim()
+
+
+const FlexUtility = stripIndent(`
+  import styled from 'styled-components'
+
+  const Flex = styled.div\`
+
+  \`
+
+  export default Flex
 `).trim()
 
 
