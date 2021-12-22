@@ -32,7 +32,6 @@ program
 
 program.parse(argv)
 const options = program.opts()
-console.log(options)
 
 const stylesPreference = {
     type: "checkbox",
@@ -90,10 +89,14 @@ const reduxAuthPreference = {
 
 const installStyledComponents = () => {
   console.log(cyan('Installing styled-components...'))
+  const packageJson = require(path.resolve(appRoot, 'package.json'))
+  packageJson.projectPreferences.styles = "styled-components"
+  const newPackageJson = JSON.stringify(packageJson, null, '\t')
+  writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
   exec(
     `${yarn ? 
-        `yarn --cwd ${JSON.stringify(appRoot)} add styled-components styled-breakpoints @types/styled-components` 
-        : `npm install --prefix ${JSON.stringify(appRoot)} styled-components styled-breakpoints @types/styled-components`
+        `yarn --cwd ${JSON.stringify(path.resolve(appRoot))} add styled-components styled-breakpoints @types/styled-components` 
+        : `npm install --prefix ${JSON.stringify(path.resolve(appRoot))} styled-components styled-breakpoints @types/styled-components`
      }`, 
     (error, stdout, stderr) => {
       if (error) {
@@ -104,18 +107,8 @@ const installStyledComponents = () => {
         console.log(`${bgRed(stderr)}`)
         exit()
       }
-
-      const packageJson = require(path.resolve(appRoot, 'package.json'))
-      
-      packageJson.projectPreferences.styles = "styled-components"
-      console.log(packageJson.projectPreferences.styles)
-    
-      // const newPackageJson = JSON.stringify(packageJson, null, '\t')
-      // writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
-      // console.log(packageJson)
       console.log(
-        `${green('styled-components, styled-breakpoints, @types/styled-components')}
-        successfully installed!`
+        `${green('styled-components, styled-breakpoints, @types/styled-components')} successfully installed!`
       )
     }
   )
