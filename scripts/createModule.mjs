@@ -4,12 +4,20 @@ import { mkdir, writeFile, readFile, readdir } from 'fs/promises'
 import { stat } from 'fs'
 import { argv, exit } from 'process'
 import chalk from 'react-dev-utils/chalk.js';
-import stripIndent from 'strip-indent' 
 import commander from 'commander'
 import inquirer from 'inquirer'
 
+import { 
+  ViewContent,
+  ViewLoadable,
+  ComponentContent,
+  ComponentLoadable,
+  StyledComponentContent,
+  TestFileContent
+} from './templates/createModuleTemplates'
+
 const appRoot = path.resolve(appPath)
-const basePath = path.resolve(appRoot, 'src')
+const basePath = path.resolve(appRoot, 'src/Modules')
 const { cyan, red, bgRed, green } = chalk
 
 const { Command } = commander
@@ -52,10 +60,10 @@ const noModuleTypeSelected = {
 
 
 let moduleName = args[0]
-let componentsDir = path.resolve(basePath, 'Components/components')
+let componentsDir = path.resolve(basePath, 'Components/componentModules')
 let styledDir = path.resolve(basePath, 'Components/Styled')
 let componentExports = path.resolve(basePath, 'Components/componentExports.ts')
-let viewsDir = path.resolve(basePath, 'Views/views')
+let viewsDir = path.resolve(basePath, 'Views/viewModules')
 let viewExports = path.resolve(basePath, 'Views/viewExports.ts')
 let moduleRoutePath = moduleName.split(/(?=[A-Z])/).map(item => item.toLowerCase()).join('-')
 
@@ -74,118 +82,16 @@ const exportsFile = (altVariable) => {
 
 const modulesDir = (altVariable) => {
   if (options.view) {
-    return viewsDir
+    return path.resolve(viewsDir)
   } else if (options.component) {
-    return componentsDir
+    return path.resolve(componentsDir)
   } else if (altVariable) {
     return path.resolve(
       basePath, 
-      `${altVariable}s/${altVariable.toLowerCase()}s`
+      `${altVariable}s/${altVariable.toLowerCase()}Modules`
     )
   }
 }
-
-
-// TEMPLATES FOR FILE CREATION
-const ViewContent = stripIndent(`
-  import React from 'react'
-
-  
-  const ${moduleName}: React.FC = (props: any) => {
-    return (
-      <div>
-        ${moduleName}
-      </div>
-    )
-  }
-
-  export default {
-    routeProps: {
-      path: '/${options.root ? '' : moduleRoutePath}',
-      exact: ${options.root || options.exact ? true : false},
-      component: ${moduleName}
-    },
-    name: '${moduleName}',
-    protectedRoute: ${options.protected ? true : false}
-  }
-`).trim()
-
-
-const ComponentContent = stripIndent(`
-  import React from 'react'
-  ${options.styled ? 
-    `import Styled${moduleName} from '../../Styled/${moduleName}.styled'`
-    : `import styles from './${moduleName}.module.css'`
-  }
-  
-  const ${moduleName}: React.FC = (props: any) => {
-    return (
-      ${options.styled ?
-      `<Styled${moduleName}>
-          ${moduleName}
-      </Styled${moduleName}>`
-        : 
-      `<div>
-        ${moduleName}
-      </div>` 
-      }
-    )
-  }
-  export default ${moduleName}
-`).trim()
-
-
-const StyledComponentContent = stripIndent(`
-  import styled from 'styled-components'
-
-  const Styled${moduleName} = styled.div\`
-
-  \`
-
-  export default Styled${moduleName}
-`).trim()
-
-
-const ViewLoadable = stripIndent(`
-  import loadable from '@loadable/component'
-  import pTimeout from 'p-timeout';
-  import pMinDelay from 'p-min-delay'
-
-  const timeoutComponentPath = '../../../utilities/components/Timeout'
-  const loaderComponentPath = '../../../utilities/components/FullscreenSpinner'
-
-  const FallbackComponent = loadable(() =>
-    pMinDelay(import(\`\${loaderComponentPath}\`), 300)
-  )
-
-  const ${moduleName}Loadable = loadable(() =>
-    pTimeout(import('./${moduleName}'), 10000, () => import(\`\${timeoutComponentPath}\`)), {
-      fallback: <FallbackComponent />
-    }
-  )
-
-  export default ${moduleName}Loadable
-`).trim()
-
-
-const ComponentLoadable = stripIndent(`
-  import loadable from '@loadable/component'
-  import pTimeout from 'p-timeout';
-
-
-  const ${moduleName}Loadable = loadable(() =>
-    pTimeout(import('./${moduleName}'), 10000, 'Element failed to load')
-  )
-
-  export default ${moduleName}Loadable
-`).trim()
-
-
-const TestFileContent = stripIndent(`
-  describe('${moduleName}', () => {
-
-  });
-`).trim()
 
 
 
@@ -202,32 +108,34 @@ const addToExports = async (exportsFile, modulesDir) => {
       }) 
     })
 
+
     const data = await readFile(exportsFile)
     const lines = data.toString().split(/\n/)
 
 
     if (selectedModuleType === 'Component') {
       if (numberOfModules === 0) {
-        lines.splice(numberOfModules, 0, `import * as ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
+        lines.splice(numberOfModules, 0, `import * as ${moduleName} from './componentModules/${moduleName}/${moduleName}Loadable'`)
         lines.push(`export const ${entityName} = ${entityName}`)
       } else {
-        lines.splice(numberOfModules - 1, 0, `import * as ${moduleName} from './${moduleName}/${moduleName}Loadable'`)
+        lines.splice(numberOfModules - 1, 0, `import * as ${moduleName} from './componentModules/${moduleName}/${moduleName}Loadable'`)
         lines.push(`export const ${entityName} = ${entityName}`)
       }
     } else {
       if (numberOfModules === 0) {
-        lines.splice(numberOfModules, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
+        lines.splice(numberOfModules, 0, `import ${moduleName} from './viewModules/${moduleName}/${moduleName}Loadable'`)
       } else {
-        lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './components/${moduleName}/${moduleName}Loadable'`)
+        lines.splice(numberOfModules - 1, 0, `import ${moduleName} from './viewModules/${moduleName}/${moduleName}Loadable'`)
       }
       lines.splice(lines.length - 4, 0, `\t${moduleName},`)
     }
 
-    
     const updatedFileContent = lines.join('\n')
     await writeFile(exportsFile, updatedFileContent, {})
 
-    console.log(`New ${selectedModuleType.toLowerCase()} ${cyan(moduleName)} added to exports in '${selectedModuleType.toLowerCase()}Exports.ts'`)
+    selectedModuleType ?
+      console.log(`New ${selectedModuleType.toLowerCase()} ${cyan(moduleName)} added to exports in '${selectedModuleType.toLowerCase()}Exports.ts'`)
+      : console.log(`New ${options.view ? 'view' : 'component'} ${cyan(moduleName)} added to exports in '${options.view ? 'view' : 'component'}Exports.ts'`) 
   } catch (error) {
     console.log(`Ooops... something went wrong: `, error)
     exit()
@@ -259,7 +167,7 @@ const createModule = async () => {
       ) {
         await writeFile(
           modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
-          ComponentContent, 
+          ComponentContent(moduleName, options), 
           {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
@@ -269,7 +177,7 @@ const createModule = async () => {
       ) {
         await writeFile(
           modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
-          ViewContent, 
+          ViewContent(moduleName, moduleRoutePath, options), 
           {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
@@ -280,7 +188,7 @@ const createModule = async () => {
         ) {
             await writeFile(
               styledDir + '/' + (file.name + file.extension), 
-              StyledComponentContent, 
+              StyledComponentContent(moduleName), 
               {}
             )
             console.log(cyan(file.name + file.extension) + ' file created!')
@@ -297,7 +205,7 @@ const createModule = async () => {
         ) {
           await writeFile(
             modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
-            ViewLoadable,
+            ViewLoadable(moduleName),
             {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
@@ -307,14 +215,14 @@ const createModule = async () => {
         ) {
           await writeFile(
             modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
-            ComponentLoadable,
+            ComponentLoadable(moduleName),
             {}
           )
         console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (file.extension === '.spec.ts') {
         await writeFile(
           modulesDir(selectedModuleType) + `/${moduleName}/` + (file.name + file.extension), 
-          TestFileContent,
+          TestFileContent(moduleName),
           {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
@@ -346,4 +254,7 @@ if (!options.view && !options.component) {
     console.log(error)
     exit()
   })
+} else {
+  createModule()
+  .catch((error) => console.log(error))
 }

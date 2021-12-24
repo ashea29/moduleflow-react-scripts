@@ -5,10 +5,22 @@ import { mkdir, writeFile, readFile, readdir } from 'fs/promises';
 import { stat, existsSync } from 'fs';
 import { argv, exit } from 'process';
 import chalk from 'react-dev-utils/chalk.js';
-import stripIndent from 'strip-indent'; 
 import commander from 'commander';
 import inquirer from 'inquirer'
 import { createRequire } from 'module'
+
+import { 
+  ContainerUtility, 
+  FlexUtility, 
+  LoadingSpinnerCSS, 
+  LoadingSpinnerStyled,
+  FullscreenSpinnerCSS, 
+  FullscreenSpinnerStyled, 
+  ThemePreset, 
+  GlobalStylesPreset, 
+  TSDeclarationsFile 
+} from './templates/configureProjectTemplates'
+
 
 
 const require = createRequire(import.meta.url)
@@ -17,7 +29,9 @@ const { appPath } = paths
 const { cyan, red, bgRed, green } = chalk
 const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src/Modules')
-const yarn = existsSync(path.join(appPath, 'yarn.lock'))
+const utilitiesComponentsPath = path.resolve(appRoot, 'src/utilities/components')
+const utilitiesStyledPath = path.resolve(appRoot, 'src/utilities/Styled')
+const yarn = existsSync(path.join(appRoot, 'yarn.lock'))
 
 const program = new Command()
 const args = argv.slice(2)
@@ -32,6 +46,7 @@ program
 
 program.parse(argv)
 const options = program.opts()
+console.log(options)
 
 const stylesPreference = {
     type: "checkbox",
@@ -87,12 +102,17 @@ const reduxAuthPreference = {
 }
 
 
-const installStyledComponents = () => {
+const updateStylesPreference = (preference) => {
   console.log(cyan('Installing styled-components...'))
   const packageJson = require(path.resolve(appRoot, 'package.json'))
-  packageJson.projectPreferences.styles = "styled-components"
+  packageJson.projectPreferences.styles = `${preference}`
   const newPackageJson = JSON.stringify(packageJson, null, '\t')
   writeFile(path.resolve(appRoot, 'package.json'), newPackageJson, {})
+  return
+}
+
+
+const installStyledComponents = () => {
   exec(
     `${yarn ? 
         `yarn --cwd ${JSON.stringify(path.resolve(appRoot))} add styled-components styled-breakpoints @types/styled-components` 
@@ -115,7 +135,7 @@ const installStyledComponents = () => {
 }
 
 if (
-    !options.styled   || 
+    !options.styled    || 
     !options.css       ||
     !options.theme     ||
     !options.utilities ||
@@ -127,105 +147,21 @@ if (
     utilitiesPreference,
     reduxAuthPreference
   ]).then((answers) => {
-    console.log(answers)
+    const stylesPreference = answers["Styles Preference"][0]
+    updateStylesPreference(stylesPreference)
     if (
       options.styled || 
       answers["Styles Preference"][0] === "styled-components"
     ) {
       installStyledComponents()
+    } else if (
+      options.css ||
+      answers["Styles Preference"][0] === "css"
+    ) {
+
     }
   }).catch((error) => {
     console.log(error)
     exit()
   })
 }
-
-
-const ContainerUtility = stripIndent(`
-  import styled from 'styled-components'
-
-  const Container = styled.div\`
-    width: 1000px;
-    max-width: 100%;
-    padding: 0.75rem 1.5rem
-    margin: 0 auto;
-  \`
-
-  export default Container
-`).trim()
-
-
-const FlexUtility = stripIndent(`
-  import styled from 'styled-components'
-
-  const Flex = styled.div\`
-
-  \`
-
-  export default Flex
-`).trim()
-
-
-const ThemePreset = stripIndent(`
-  const theme = {
-    colors: {},
-    breakpoints: {
-      phoneSmall: "300px",
-      phoneMedium: "599px",
-      tabletPortrait: "600px",
-      tabletLandscape: "900px",
-      pcSmall: "1200px",
-      pcMedium: "1500px",
-      pcLarge: "1800px",
-      pcXLarge: "2100px"
-    }
-  }
-
-
-  export default theme
-`).trim()
-
-
-const GlobalStylesPreset = stripIndent(`
-  import { createGlobalStyle } from "styled-components"
-
-
-  const GlobalStyles = createGlobalStyle\`
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Poppins', sans-serif;
-    }
-  \`
-
-  export default GlobalStyles
-`).trim()
-
-
-const TSDeclarationsFile = stripIndent(`
-  import { DefaultTheme } from 'styled-components';
-  
-  declare module 'styled-components' {
-    export interface DefaultTheme {
-      breakpoints: {
-        [name in 
-          'phoneSmall'      | 
-          'phoneMedium'     | 
-          'tabletPortrait'  | 
-          'tabletLandscape' | 
-          'pcSmall'         | 
-          'pcMedium'        | 
-          'pcLarge'         | 
-          'pcXLarge'
-        ]: number;
-      };
-    }
-  }
-`).trim()
