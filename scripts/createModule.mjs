@@ -50,11 +50,30 @@ const noModuleTypeSelected = {
       name: "Component" 
     }
   ],
+  when(answer) {
+    return (!options.view && !options.component) || !answer
+  },
   validate(answer) {
     if (answer.length < 1) {
       return 'You must select an option'
     }
     return true
+  }
+}
+
+const noModuleNameProvided = {
+  type: "input",
+  name: "Module Name",
+  message: "Please provide a name for the new module: ",
+  when(answer) {
+    return !moduleName || !answer
+  },
+  validate(answer) {
+    const valid = answer.match(/^[a-zA-Z]$/)
+    if (answer.length > 1 && valid) {
+      return true
+    }
+    return 'You must enter a valid name (only uppercase and lowercase letters, no spaces)'
   }
 }
 
@@ -243,11 +262,13 @@ const createModule = async () => {
 }
 
 
-if (!options.view && !options.component) {
+if (
+  (!options.view && !options.component) || !moduleName
+) {
   inquirer.prompt([
+    noModuleNameProvided,
     noModuleTypeSelected
   ]).then((answers) => {
-    console.log(answers['Module Type'][0])
     selectedModuleType = answers['Module Type'][0]
     createModule()
   }).catch((error) => {
