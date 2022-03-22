@@ -19,4 +19,4 @@ As for the new scripts I've added to this package, documentation will appear her
 
 ### Version Info
 
-The current version of this package is 0.2.5 while still in development. Once ready for production the version will be updated to 1.0.0, but I intend to keep it in line with the most recent stable version of **react-scripts** (currently version 5.0.0).
+The current version of this package is 0.2.6 while still in development. Once ready for production the version will be updated to 1.0.0, but I intend to keep it in line with the most recent stable version of **react-scripts** (currently version 5.0.0).

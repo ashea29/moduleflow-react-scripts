@@ -6,9 +6,9 @@ export const ContainerUtility = stripIndent(`
   import styled from 'styled-components'
 
   const Container = styled.div\`
-    width: 1000px;
-    max-width: 100%;
-    padding: 0.75rem 1.5rem
+    width: 80%;
+    max-width: 1000px;
+    padding: 0.75rem 1.5rem;
     margin: 0 auto;
   \`
 
@@ -20,42 +20,113 @@ export const FlexUtility = stripIndent(`
   import styled from 'styled-components'
 
   const Flex = styled.div\`
-
+    display: flex;
+    flex-direction: \${(props) => props.direction || "row"};
+    align-items: \${(props) => props.align || "center"};
+    justify-content: \${(props) => props.justify || "center"};
+    width: \${(props) => props.width || "100%"};
+    min-height: \${(props) => props.minHeight || "100%"};
   \`
 
   export default Flex
 `).trim()
 
 
-export const LoadingSpinner = (answers) => {
-if (answers["Styles Preference"][0] === "styled-components") {
-  return stripIndent(`
-    import React from 'react'
-    import StyledLoadingSpinner from '../Styled/LoadingSpinner.styled'
+export const CenteredSectionUtility = stripIndent(`
+  import styled from 'styled-components'
 
-    const LoadingSpinner: React.FC = () => {
-      return (
-        <StyledLoadingSpinner />
-      )
-    }
+  const CenteredSection = styled.section\`
+    display: grid;
+    width: 100%;
+    min-height: 100vh;
+    place-content: center;
+  \`
 
-    export default LoadingSpinner
-    `).trim()
-  } else if (answers["Styles Preference"][0] === "CSS") {
-    return stripIndent(`
-      import React from 'react'
-      import './LoadingSpinner.css'
+  export default CenteredSection
+`).trim()
 
-      const LoadingSpinner: React.FC = () => {
-        return (
-          <div className='spinner'></div>
-        )
-      }
 
-      export default LoadingSpinner
-    `).trim()
+export const GlobalUtilitiesCSS = stripIndent(`
+  .container {
+    width: 80%;
+    max-width: 1000px;
+    padding: 0.75rem 1.5rem;
+    margin: 0 auto;
   }
-}
+
+  .flex-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .flex-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .centered-section {
+    display: grid;
+    width: 100%;
+    min-height: 100vh;
+    place-content: center;
+  }
+`).trim()
+
+
+export const GlobalUtilitiesSCSS = stripIndent(`
+  .container {
+    width: 80%;
+    max-width: 1000px;
+    padding: 0.75rem 1.5rem;
+    margin: 0 auto;
+  }
+
+  .flex-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .flex-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .centered-section {
+    display: grid;
+    width: 100%;
+    min-height: 100vh;
+    place-content: center;
+  }
+`).trim()
+
+
+export const LoadingSpinner = stripIndent(`
+  import React from 'react'
+  import './LoadingSpinner.css'
+
+  const LoadingSpinner: React.FC = () => {
+    return (
+      <div className='spinner'></div>
+    )
+  }
+
+  export default LoadingSpinner
+`).trim()
+
+
+export const LoadingSpinnerStyledComponent = stripIndent(`
+  import React from 'react'
+  import StyledLoadingSpinner from '../Styled/LoadingSpinner.styled'
+
+  const LoadingSpinner: React.FC = () => {
+    return (
+      <StyledLoadingSpinner />
+    )
+  }
+
+  export default LoadingSpinner
+`).trim()
+
 
 export const LoadingSpinnerCSS = stripIndent(`
   .spinner {
@@ -85,6 +156,37 @@ export const LoadingSpinnerCSS = stripIndent(`
     }
   }
 `).trim()
+
+
+export const LoadingSpinnerSCSS = stripIndent(`
+  .spinner {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+
+    &:after {
+      content: ' ';
+      display: block;
+      width: 64px;
+      height: 64px;
+      margin: 8px;
+      border-radius: 50%;
+      border: 6px solid #713956;
+      border-color: #713956 transparent #713956 transparent;
+      animation: spinner 1.2s linear infinite;
+    }
+  }
+
+  @keyframes spinner {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`).trim()
+
 
 export const LoadingSpinnerStyled = stripIndent(`
   import styled from 'styled-components'
@@ -120,45 +222,54 @@ export const LoadingSpinnerStyled = stripIndent(`
   export default StyledLoadingSpinner
 `).trim()
 
-export const FullscreenSpinner = (answers) => {
-  if (answers["Styles Preference"][0] === "styled-components") {
-    return stripIndent(`
-        import React from 'react'
-        import LoadingSpinner from './LoadingSpinner'
-        import StyledFullscreenSpinner from '../Styled/FullscreenSpinner.styled'
-        
-        
-        const FullScreenSpinner: React.FC = () => {
-          return (
-            <StyledFullscreenSpinner>
-              <LoadingSpinner />
-            </StyledFullscreenSpinner>
-          )
-        }
-        
-        export default FullScreenSpinner
-      `).trim()
-    } else if (answers["Styles Preference"][0] === "CSS") {
-      return stripIndent(`
-        import React from 'react'
-        import LoadingSpinner from './LoadingSpinner'
-        import './FullScreenSpinner.css'
-        
-        
-        const FullScreenSpinner: React.FC = () => {
-          return (
-            <div className='spinner-container'>
-              <LoadingSpinner />
-            </div>
-          )
-        }
-        
-        export default FullScreenSpinner
-      `).trim()
-    }
+export const FullscreenSpinner = stripIndent(`
+  import React from 'react'
+  import LoadingSpinner from './LoadingSpinner'
+  import './FullScreenSpinner.css'
+  
+  
+  const FullScreenSpinner: React.FC = () => {
+    return (
+      <div className='spinner-container'>
+        <LoadingSpinner />
+      </div>
+    )
+  }
+  
+  export default FullScreenSpinner
+`).trim()
+
+
+export const FullscreenSpinnerStyledComponent = stripIndent(`
+  import React from 'react'
+  import LoadingSpinner from './LoadingSpinner'
+  import StyledFullscreenSpinner from '../Styled/FullscreenSpinner.styled'
+
+
+  const FullScreenSpinner: React.FC = () => {
+    return (
+      <StyledFullscreenSpinner>
+        <LoadingSpinner />
+      </StyledFullscreenSpinner>
+    )
   }
 
+  export default FullScreenSpinner
+`).trim()
+
+
 export const FullscreenSpinnerCSS = stripIndent(`
+  .spinner-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 45% 0;
+    width: 100%;
+  }
+`).trim()
+
+
+export const FullscreenSpinnerSCSS = stripIndent(`
   .spinner-container {
     display: flex;
     align-items: center;
@@ -185,12 +296,22 @@ export const FullscreenSpinnerStyled = stripIndent(`
 `).trim()
 
 
-export const ThemePreset = stripIndent(`
+export const ThemeStyledPreset = stripIndent(`
   const theme = {
-    colors: {},
+    colors: {
+      primary: '',
+      secondary: '',
+      tertiary: '',
+      success: '',
+      warning: '',
+      danger: ''
+    },
+    fonts: {
+      primaryFont: '',
+      secondaryFont: '',
+      tertiaryFont: ''
+    },
     breakpoints: {
-      phoneSmall: "300px",
-      phoneMedium: "599px",
       tabletPortrait: "600px",
       tabletLandscape: "900px",
       pcSmall: "1200px",
@@ -205,6 +326,86 @@ export const ThemePreset = stripIndent(`
 `).trim()
 
 
+export const ThemeCSSPreset = stripIndent(`
+  @import url('https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&display=swap');
+
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+  :root {
+    /* 
+      Colors - BE SURE TO SET VALUES FOR THE VARIABLES (replacing empty strings
+      with color name, rgb/rgba, or hex)! 
+    */
+    --primary-color: '';
+    --secondary-color: '';
+    --tertiary-color: '';
+    --success-color: '';
+    --warning-color: '';
+    --danger-color: '';
+
+    // Fonts
+    --main-font: 'Poppins', sans-serif;
+    --tertiary-font: 'Jaldi', sans-serif;
+    --secondary-font: 'Montserrat', sans-serif;
+
+    --heading-font: var(--tertiary-font);
+    --subheading-font: var(--secondary-font);
+
+
+    /* Breakpoints (designed for min-width) */
+    --tabletPortrait: 600px;
+    --tabletLandscape: 900px;
+    --pcSmall: 1200px;
+    --pcMedium: 1500px;
+    --pcLarge: 1800px;
+    --pcXLarge: 2100px;
+  }
+`).trim()
+
+
+export const ThemeSCSSPreset = stripIndent(`
+  @import url('https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&display=swap');
+
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+
+  // Fonts
+  $main-font: 'Poppins', sans-serif;
+  $tertiary-font: 'Jaldi', sans-serif;
+  $secondary-font: 'Montserrat', sans-serif;
+
+  $heading-font: $tertiary-font;
+  $subheading-font: $secondary-font;
+
+
+  /* 
+    Colors - BE SURE TO SET VALUES FOR THE VARIABLES (replacing empty strings
+    with color name, rgb/rgba, or hex)! 
+  */
+  $primary-color: '';
+  $secondary-color: '';
+  $tertiary-color: '';
+  $success-color: '';
+  $warning-color: '';
+  $danger-color: '';
+
+
+  /* Breakpoints (designed for min-width) */
+  $tabletPortrait: 600px;
+  $tabletLandscape: 900px;
+  $pcSmall: 1200px;
+  $pcMedium: 1500px;
+  $pcLarge: 1800px;
+  $pcXLarge: 2100px;
+`).trim()
+
+
 export const GlobalStylesPreset = stripIndent(`
   import { createGlobalStyle } from "styled-components"
 
@@ -213,13 +414,33 @@ export const GlobalStylesPreset = stripIndent(`
     @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
+      font-family: 'Poppins', sans-serif;
+    }
+  \`
+
+  export default GlobalStyles
+`).trim()
+
+
+export const GlobalStylesThemePreset = stripIndent(`
+  import { createGlobalStyle } from "styled-components"
+
+
+  const GlobalStyles = createGlobalStyle\`
+    *, *::before, *::after {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    body {
       font-family: 'Poppins', sans-serif;
     }
   \`
@@ -232,14 +453,98 @@ export const GlobalStylesCSSPreset = stripIndent(`
   @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 
-  * {
+  *, *::before, *::after {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
   body {
+    font-family: 'Poppins', sans-serif;
+  }
+`).trim()
+
+
+export const GlobalStylesThemeCSSPreset = stripIndent(`
+  @import '../../theme/theme.css'
+
+  *, *::before, *::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+  }
+
+  body {
+    font-family: var(--primary-font);
+  }
+`).trim()
+
+
+export const GlobalStylesSCSSPreset = stripIndent(`
+  /* Global styles (variables, mixins, functions) */
+
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+  // Padding & margin reset, box-sizing 
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
     font-family: 'Poppins', sans-serif;
+  }
+
+
+  // Set text color based on background
+  @function set-text-color($color) {
+    @if (lightness($color) > 70) {
+      @return #333;
+    } @else {
+      @return #fff;
+    }
+  }
+
+  // Set background and text color
+  @mixin set-background-color($color) {
+    background-color: $color;
+    color: set-text-color($color)
+  }
+`).trim()
+
+
+export const GlobalStylesThemeSCSSPreset = stripIndent(`
+  @use '../../theme/theme.scss' as *;
+
+  /* Global styles (variables, mixins, functions) */
+
+  // Padding & margin reset, box-sizing 
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: $primary-font;
+  }
+
+
+  // Set text color based on background
+  @function set-text-color($color) {
+    @if (lightness($color) > 70) {
+      @return #333;
+    } @else {
+      @return #fff;
+    }
+  }
+
+  // Set background and text color
+  @mixin set-background-color($color) {
+    background-color: $color;
+    color: set-text-color($color)
   }
 `).trim()
 
@@ -264,6 +569,7 @@ export const TSDeclarationsFile = stripIndent(`
     }
   }
 `).trim()
+
 
 export const ReduxAuthFile = stripIndent(`
   import { createSlice } from '@reduxjs/toolkit'
@@ -477,4 +783,11 @@ export const ReduxAuthThunksFile = stripIndent(`
       }
     }
   )
+`).trim()
+
+
+export const indexTSXImports = stripIndent(`
+  import { ThemeProvider } from 'styled-components'
+  import theme from './theme/Styled/Theme'
+  import GlobalStyles from './theme/Styled/Global'
 `).trim()
