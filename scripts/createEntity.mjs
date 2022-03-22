@@ -1,111 +1,30 @@
 import path from 'path';
-import { appPath } from 'moduleflow-react-scripts/config/paths';
 import chalk from 'react-dev-utils/chalk.js';
 import { mkdir, writeFile, readFile, readdir } from 'fs/promises'
 import { stat } from 'fs'
-import { argv, exit } from 'process' 
-import stripIndent from 'strip-indent'
+import { argv, exit } from 'process'
+
+import { appPath } from '../config/paths';
+import {
+  EntitySliceContent,
+  EntityThunksContent,
+  EntityTestContent
+} from './addedScriptUtils/createEntity/templates.mjs'
+import { entitiesPath } from './addedScriptUtils/scriptPaths.mjs'
+import files from './addedScriptUtils/createEntity/filesIndex.mjs';
 
 
 const appRoot = path.resolve(appPath)
 const basePath = path.resolve(appRoot, 'src/State')
 const { cyan, red, bgRed, green } = chalk
 
-const entitiesPath = path.resolve(appRoot, 'src/State/Entities')
+
 const entityExportsFile = `${basePath}/Entities/entityExports.ts`
 const entityReducerFile = `${basePath}/entitiesReducer.ts`
 const args = argv.slice(2)
 
 let entityName = args[0]
 
-
-const EntitySliceContent = stripIndent(`
-  import { createSlice } from '@reduxjs/toolkit'
-  import { RootState } from '../../State/store'
-  import { createSelector } from 'reselect'
-  import { ${entityName}Thunk } from './${entityName}Thunks'
-
-
-  interface Initial${entityName}State {
-    isLoading: Boolean
-    ${entityName}Data: {} | null
-  }
-
-  const initialState: Initial${entityName}State = {
-    isLoading: false,
-    ${entityName}Data: null
-  }
-
-  const ${entityName}Slice = createSlice({
-    name: '${entityName}',
-    initialState,
-    reducers: {
-      SET_DATA: (state, { payload }) => {
-        state.${entityName}Data = payload
-      }
-    },
-    extraReducers: (builder) => {
-      builder.addCase(${entityName}Thunk.pending, (state, action) => {
-        state.isLoading = true
-      })
-      builder.addCase(${entityName}Thunk.fulfilled, (state, action) => {
-        state.isLoading = false
-      })
-      builder.addCase(${entityName}Thunk.rejected, (state, action) => {
-        state.isLoading = false
-      })
-    }
-  })
-
-  export const { SET_DATA } = ${entityName}Slice.actions
-
-  export const select${entityName[0].toUpperCase + entityName.slice(1)} = createSelector(
-    (state: RootState) => state.modules.${entityName}, 
-    (${entityName}Data) => ${entityName}Data
-  )
-  
-  export default ${entityName}Slice.reducer
-`).trim()
-
-
-const EntityThunksContent = stripIndent(`
-  import { createAsyncThunk } from '@reduxjs/toolkit'
-  import { AppDispatch } from '../../State/store'
-
-
-  interface ${entityName}ThunkProps {
-    fieldOne: string
-  }
-
-  interface ThunkAPI {
-    dispatch: AppDispatch
-    getState: Function
-    extra?: any
-    requestId: string
-    signal: AbortSignal
-  }
-
-  export const ${entityName}Thunk = createAsyncThunk(
-    '${entityName}/sample',
-    async (thunkProps: ${entityName}ThunkProps, thunkAPI: ThunkAPI) => {
-      const dispatch = thunkAPI.dispatch
-      try {
-        setTimeout(() => {
-          console.log('Sample output from thunk')
-        }, 3000)
-      } catch (error) {
-        throw error
-      }
-    }
-  )
-`).trim()
-
-
-const EntityTestContent = stripIndent(`
-  describe('${entityName} state', () => {
-
-  });
-`).trim()
 
 
 const addToReducerAndExports = async (reducerFile, exportsFile) => {
@@ -173,21 +92,21 @@ const createEntity = async () => {
       if (file.extension === '.ts') {
         await writeFile(
           entitiesPath + `/${entityName}/` + (file.name + file.extension), 
-          EntitySliceContent,
+          EntitySliceContent(entityName),
           {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (file.extension === 'Thunks.ts') {
         await writeFile(
           entitiesPath + `/${entityName}/` + (file.name + file.extension), 
-          EntityThunksContent,
+          EntityThunksContent(entityName),
           {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
       } else if (file.extension === '.spec.ts') {
         await writeFile(
           entitiesPath + `/${entityName}/` + (file.name + file.extension), 
-          EntityTestContent,
+          EntityTestContent(entityName),
           {}
         )
         console.log(cyan(file.name + file.extension) + ' file created!')
